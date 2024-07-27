@@ -11,7 +11,7 @@ use Math::Round qw(nearest);
 use Time::Piece;
 use Time::Seconds;
 
-my $rolling_days      = 20; # Number of days on which we smooth the data.
+my $rolling_days      = 10; # Number of days on which we smooth the data.
 
 my $standard_pop_file = 'data/who_standard_population_age_group_5.csv';
 
@@ -36,7 +36,6 @@ while (<$in_mongoljunk>) {
     chomp $_;
     my ($date, $dose, $age, $alive, $dead) = split ',', $_;
     next if $date eq 'date';
-    next unless $age >= 10 && $age <= 24;
     my $age_group = age_group_from_age($age);
     my $compdate  = $date;
     $compdate     =~ s/\D//g;
@@ -57,7 +56,7 @@ close $in_mongoljunk;
 # each age group, compared to the total sub-population,
 # mortality rates, rates of adjustment toward the standardized population,
 # and ASMR.
-open my $out, '>:utf8', 'asmr_dataframe_10_24.csv';
+open my $out, '>:utf8', 'asmr_dataframe.csv';
 say $out "x,z,y,pct";
 for my $compdate (sort{$a <=> $b} keys %mongoljunk_tot_pop) {
     next if $compdate < 20210101;
@@ -113,8 +112,8 @@ for my $compdate (sort{$a <=> $b} keys %mongoljunk_tot_pop) {
     my $asmr_vaccinated = nearest(0.01, $daily_asmr{'All vaccinated'}) // die;
 
     # Prepares the 'xy' dataframe to be fed in Mongol's visual.
-	say $out "$date,Unvaccinated,$asmr_unvaccinated,$percent_unvaccinated";
-	say $out "$date,All vaccinated,$asmr_vaccinated,$percent_vaccinated";
+    say $out "$date,Unvaccinated,$asmr_unvaccinated,$percent_unvaccinated";
+    say $out "$date,All vaccinated,$asmr_vaccinated,$percent_vaccinated";
 }
 close $out;
 
